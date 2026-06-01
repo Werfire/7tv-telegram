@@ -60,6 +60,8 @@ func main() {
 			text = text[1 : len(text)-1]
 		}
 
+		log.Printf("query from @%s: raw=%q parsed=(text=%q, channel=%q, exact=%v, max=%d)", q.From.Username, q.Text, text, channel, exact, maxResults)
+
 		emotes, err := getEmotes(text, channel, exact)
 		if err != nil {
 			log.Println(err)
