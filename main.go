@@ -42,13 +42,25 @@ func main() {
 			}
 		}
 
+		// Parse optional channel prefix: "@xqc pepe" → channel="xqc", text="pepe".
+		channel := ""
+		if strings.HasPrefix(text, "@") {
+			parts := strings.SplitN(text, " ", 2)
+			channel = parts[0][1:] // strip leading @
+			if len(parts) == 2 {
+				text = parts[1]
+			} else {
+				text = ""
+			}
+		}
+
 		// Exact search when query is wrapped in double quotes: "pepe".
 		exact := len(text) >= 2 && text[0] == '"' && text[len(text)-1] == '"'
 		if exact {
 			text = text[1 : len(text)-1]
 		}
 
-		emotes, err := getEmotes(text, exact)
+		emotes, err := getEmotes(text, channel, exact)
 		if err != nil {
 			log.Println(err)
 			return

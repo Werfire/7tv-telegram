@@ -1,8 +1,6 @@
 package emote
 
 import (
-	"strings"
-
 	"github.com/sahilm/fuzzy"
 )
 
@@ -56,13 +54,11 @@ func SearchEmotes(query string, e []Emote) []Emote {
 	return rankedEmotes
 }
 
-// ExactSearchEmotes returns only emotes whose name exactly matches the query
-// (case-insensitive).
+// ExactSearchEmotes returns only emotes whose name exactly matches the query (case-sensitive).
 func ExactSearchEmotes(query string, e []Emote) []Emote {
-	q := strings.ToLower(query)
 	var result []Emote
 	for _, em := range e {
-		if strings.ToLower(em.Name) == q {
+		if em.Name == query {
 			result = append(result, em)
 		}
 	}
