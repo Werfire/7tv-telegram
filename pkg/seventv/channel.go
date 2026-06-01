@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// objectID is a custom scalar type matching 7TV's ObjectID GQL type.
-type objectID string
+// ObjectID is a custom scalar type matching 7TV's ObjectID GQL type.
+type ObjectID string
 
 // ChannelEmotes fetches all emotes from a channel's emote sets by 7TV username (case-insensitive).
 func ChannelEmotes(username string) ([]Emote, error) {
@@ -61,7 +61,7 @@ func ChannelEmotes(username string) ([]Emote, error) {
 		} `graphql:"user(id: $id)"`
 	}{}
 	if err := client.Query(context.Background(), &emoteSetQ, map[string]interface{}{
-		"id": objectID(userID),
+		"id": ObjectID(userID),
 	}); err != nil {
 		return nil, fmt.Errorf("could not fetch emotes for channel %q: %w", username, err)
 	}
