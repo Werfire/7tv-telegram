@@ -9,7 +9,7 @@ import (
 
 const (
 	gqlEndpoint = "https://7tv.io/v3/gql"
-	limit       = 20
+	limit       = 50
 )
 
 // SearchEmotes searches for emotes from the query

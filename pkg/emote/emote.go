@@ -1,8 +1,20 @@
 package emote
 
 import (
+	"strings"
+
 	"github.com/sahilm/fuzzy"
 )
+
+// IsASCII reports whether every character in s is ASCII.
+func IsASCII(s string) bool {
+	for _, r := range s {
+		if r > 127 {
+			return false
+		}
+	}
+	return true
+}
 
 // Emote is a standardized struct for an emote
 type Emote struct {
@@ -27,8 +39,13 @@ func (e emotes) String(i int) string {
 	return e[i].Name
 }
 
-// SearchEmotes fuzzy searches emotes from the query text
+// SearchEmotes fuzzy searches emotes from the query text.
+// For non-ASCII queries (e.g. Cyrillic), the input slice is returned as-is
+// since fuzzy matching against mostly-ASCII emote names would yield no results.
 func SearchEmotes(query string, e []Emote) []Emote {
+	if !IsASCII(query) {
+		return e
+	}
 	matches := fuzzy.FindFrom(query, emotes(e))
 
 	rankedEmotes := make([]Emote, len(matches))
@@ -37,4 +54,17 @@ func SearchEmotes(query string, e []Emote) []Emote {
 	}
 
 	return rankedEmotes
+}
+
+// ExactSearchEmotes returns only emotes whose name exactly matches the query
+// (case-insensitive).
+func ExactSearchEmotes(query string, e []Emote) []Emote {
+	q := strings.ToLower(query)
+	var result []Emote
+	for _, em := range e {
+		if strings.ToLower(em.Name) == q {
+			result = append(result, em)
+		}
+	}
+	return result
 }

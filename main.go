@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/Sadzeih/bttv-telegram/pkg/emote"
 	"log"
 	"math"
 	"os"
 	"strconv"
+	"strings"
 
+	"github.com/Sadzeih/bttv-telegram/pkg/emote"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
 func main() {
 	b, err := tb.NewBot(tb.Settings{
-		// TODO: better config handling (with viper)
 		Token: os.Getenv("TOKEN"),
 		Poller: &tb.Webhook{
 			Listen: os.Getenv("LISTEN_ADDR"),
@@ -31,12 +31,29 @@ func main() {
 		if q.Text == "" {
 			return
 		}
-		emotes, err := getEmotes(q.Text)
+
+		// Parse optional leading count: "5 pepe" → maxResults=5, text="pepe".
+		text := q.Text
+		maxResults := 20
+		if parts := strings.SplitN(text, " ", 2); len(parts) == 2 {
+			if n, parseErr := strconv.Atoi(parts[0]); parseErr == nil && n > 0 {
+				maxResults = int(math.Min(50, float64(n)))
+				text = parts[1]
+			}
+		}
+
+		// Exact search when query is wrapped in double quotes: "pepe".
+		exact := len(text) >= 2 && text[0] == '"' && text[len(text)-1] == '"'
+		if exact {
+			text = text[1 : len(text)-1]
+		}
+
+		emotes, err := getEmotes(text, exact)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		emotes = emotes[:int(math.Min(50, float64(len(emotes))))]
+		emotes = emotes[:int(math.Min(float64(maxResults), float64(len(emotes))))]
 
 		results := make(tb.Results, len(emotes))
 		for i, e := range emotes {
@@ -57,7 +74,6 @@ func main() {
 					Width:     e.Width,
 					Height:    e.Height,
 				}
-
 			default:
 				result = nil
 			}
