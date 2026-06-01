@@ -1,6 +1,8 @@
 package emote
 
 import (
+	"strings"
+
 	"github.com/sahilm/fuzzy"
 )
 
@@ -52,6 +54,18 @@ func SearchEmotes(query string, e []Emote) []Emote {
 	}
 
 	return rankedEmotes
+}
+
+// ChannelSearchEmotes returns emotes whose alias contains the query as a substring (case-insensitive).
+func ChannelSearchEmotes(query string, e []Emote) []Emote {
+	q := strings.ToLower(query)
+	var result []Emote
+	for _, em := range e {
+		if strings.Contains(strings.ToLower(em.Name), q) {
+			result = append(result, em)
+		}
+	}
+	return result
 }
 
 // ExactSearchEmotes returns only emotes whose name exactly matches the query (case-sensitive).
