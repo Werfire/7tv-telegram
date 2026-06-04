@@ -47,7 +47,7 @@ func main() {
 		// Parse optional leading count: "5 pepe" → maxResults=5, text="pepe".
 		if parts := strings.SplitN(text, " ", 2); len(parts) == 2 {
 			if n, parseErr := strconv.Atoi(parts[0]); parseErr == nil && n > 0 {
-				maxResults = int(math.Min(50, float64(n)))
+				maxResults = n
 				text = parts[1]
 				countSet = true
 			}
