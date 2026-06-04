@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/Sadzeih/bttv-telegram/pkg/emote"
+	"github.com/Sadzeih/bttv-telegram/pkg/seventv"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -40,7 +41,7 @@ func main() {
 		}
 
 		text := q.Text
-		maxResults := 20
+		maxResults := seventv.PageSize
 		countSet := false
 
 		// Parse optional leading count: "5 pepe" → maxResults=5, text="pepe".
@@ -83,8 +84,14 @@ func main() {
 			return
 		}
 
+		log.Printf("@%s text=%q channel=%q exact=%v showNames=%v max=%d offset=%d",
+			q.From.Username, text, channel, exact, showNames, maxResults, pageOffset)
+
+		// For global search, convert byte offset to 1-based page number.
+		page := pageOffset/seventv.PageSize + 1
+
 		var emotes []emote.Emote
-		emotes, err = getEmotes(text, channel, exact)
+		emotes, err = getEmotes(text, channel, exact, page)
 
 		// On subsequent pages, silently stop on error or exhaustion.
 		if pageOffset > 0 && (err != nil || len(emotes) == 0) {
@@ -99,12 +106,12 @@ func main() {
 				log.Println(err)
 				article = &tb.ArticleResult{
 					Title: "❌ Channel not found on 7TV",
-					Text:  "❌ Channel not found on 7TV",
+					Text:  "I couldn't find the channel... maybe it doesn't exist 🤔",
 				}
 			} else {
 				article = &tb.ArticleResult{
 					Title: "🔍 No emotes found",
-					Text:  "🔍 No emotes found",
+					Text:  "I struggled to find my emote 😔",
 				}
 			}
 			article.SetResultID("1")
@@ -114,26 +121,28 @@ func main() {
 			return
 		}
 
-		// Channel results: paginate. Global results: apply limit directly.
 		var nextOffset string
-		if channel != "" {
-			pageSize := maxResults
-			if !countSet {
-				pageSize = 50
-			}
+		if countSet {
+			// Manual limit: slice and never paginate.
+			emotes = emotes[:int(math.Min(float64(maxResults), float64(len(emotes))))]
+		} else if channel != "" {
+			// Channel: paginate in-memory slice.
 			total := len(emotes)
 			start := pageOffset
 			if start >= total {
 				b.Answer(q, &tb.QueryResponse{CacheTime: 0})
 				return
 			}
-			end := int(math.Min(float64(start+pageSize), float64(total)))
+			end := int(math.Min(float64(start+seventv.PageSize), float64(total)))
 			emotes = emotes[start:end]
 			if end < total {
 				nextOffset = strconv.Itoa(end)
 			}
 		} else {
-			emotes = emotes[:int(math.Min(float64(maxResults), float64(len(emotes))))]
+			// Global: 7TV already returned the right page; more pages if full.
+			if len(emotes) == seventv.PageSize {
+				nextOffset = strconv.Itoa(pageOffset + seventv.PageSize)
+			}
 		}
 
 		results := make(tb.Results, len(emotes))
@@ -149,6 +158,7 @@ func main() {
 				}
 				if showNames {
 					r.Title = e.Name
+					r.Caption = e.Name
 				}
 				result = r
 			case "gif", "webp":
@@ -161,6 +171,7 @@ func main() {
 				}
 				if showNames {
 					r.Title = e.Name
+					r.Caption = e.Name
 				}
 				result = r
 			default:

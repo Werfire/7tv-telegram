@@ -9,11 +9,11 @@ import (
 
 const (
 	gqlEndpoint = "https://7tv.io/v3/gql"
-	limit       = 50
+	PageSize    = 50
 )
 
-// SearchEmotes searches for emotes from the query
-func SearchEmotes(query string) ([]Emote, error) {
+// SearchEmotes searches for emotes from the query on the given 1-based page.
+func SearchEmotes(query string, page int) ([]Emote, error) {
 	q := struct {
 		Emotes struct {
 			Items []struct {
@@ -28,12 +28,13 @@ func SearchEmotes(query string) ([]Emote, error) {
 					Url string
 				}
 			}
-		} `graphql:"emotes(query: $query, limit: $limit)"`
+		} `graphql:"emotes(query: $query, limit: $limit, page: $page)"`
 	}{}
 	client := graphql.NewClient(gqlEndpoint, http.DefaultClient)
 	err := client.Query(context.Background(), &q, map[string]interface{}{
 		"query": query,
-		"limit": limit,
+		"limit": graphql.Int(PageSize),
+		"page":  graphql.Int(page),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("could not search emotes with query \"%s\": %w", query, err)
