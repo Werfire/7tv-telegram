@@ -76,7 +76,6 @@ func main() {
 		exact := len(text) >= 2 && text[0] == '"' && text[len(text)-1] == '"'
 		if exact {
 			text = text[1 : len(text)-1]
-			showNames = false
 		}
 
 		// Global search requires a non-empty query.
