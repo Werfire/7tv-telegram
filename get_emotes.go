@@ -5,7 +5,7 @@ import (
 	"github.com/Sadzeih/bttv-telegram/pkg/seventv"
 )
 
-func getEmotes(query string, channel string, exact bool, page int) ([]emote.Emote, error) {
+func getEmotes(query string, channel string, exact bool, exactCI bool, page int) ([]emote.Emote, error) {
 	var raw []seventv.Emote
 	var err error
 
@@ -24,6 +24,9 @@ func getEmotes(query string, channel string, exact bool, page int) ([]emote.Emot
 		if exact {
 			return emote.ExactSearchEmotes(query, emotes), nil
 		}
+		if exactCI {
+			return emote.ExactCISearchEmotes(query, emotes), nil
+		}
 		return emote.ChannelSearchEmotes(query, emotes), nil
 	}
 
@@ -37,6 +40,9 @@ func getEmotes(query string, channel string, exact bool, page int) ([]emote.Emot
 	}
 	if exact {
 		return emote.ExactSearchEmotes(query, emotes), nil
+	}
+	if exactCI {
+		return emote.ExactCISearchEmotes(query, emotes), nil
 	}
 	return emote.SearchEmotes(query, emotes), nil
 }

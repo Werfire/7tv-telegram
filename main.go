@@ -72,9 +72,14 @@ func main() {
 			text = text[1:]
 		}
 
-		// Exact search when query is wrapped in double quotes: "pepe".
+		// Exact case-sensitive search: "pepe"
 		exact := len(text) >= 2 && text[0] == '"' && text[len(text)-1] == '"'
 		if exact {
+			text = text[1 : len(text)-1]
+		}
+		// Exact case-insensitive search: 'pepe'
+		exactCI := !exact && len(text) >= 2 && text[0] == '\'' && text[len(text)-1] == '\''
+		if exactCI {
 			text = text[1 : len(text)-1]
 		}
 
@@ -83,14 +88,14 @@ func main() {
 			return
 		}
 
-		log.Printf("@%s text=%q channel=%q exact=%v showNames=%v max=%d offset=%d",
-			q.From.Username, text, channel, exact, showNames, maxResults, pageOffset)
+		log.Printf("@%s text=%q channel=%q exact=%v exactCI=%v showNames=%v max=%d offset=%d",
+			q.From.Username, text, channel, exact, exactCI, showNames, maxResults, pageOffset)
 
 		// For global search, convert byte offset to 1-based page number.
 		page := pageOffset/seventv.PageSize + 1
 
 		var emotes []emote.Emote
-		emotes, err = getEmotes(text, channel, exact, page)
+		emotes, err = getEmotes(text, channel, exact, exactCI, page)
 
 		// On subsequent pages, silently stop on error or exhaustion.
 		if pageOffset > 0 && (err != nil || len(emotes) == 0) {
@@ -121,25 +126,28 @@ func main() {
 		}
 
 		var nextOffset string
-		if countSet {
-			// Manual limit: slice and never paginate.
+		if countSet && maxResults <= seventv.PageSize {
+			// Small manual limit: slice once, no pagination.
 			emotes = emotes[:int(math.Min(float64(maxResults), float64(len(emotes))))]
 		} else if channel != "" {
-			// Channel: paginate in-memory slice.
+			// Channel: paginate in-memory slice, capped at maxResults when countSet.
 			total := len(emotes)
 			start := pageOffset
-			if start >= total {
+			if start >= total || (countSet && start >= maxResults) {
 				b.Answer(q, &tb.QueryResponse{CacheTime: 0})
 				return
 			}
 			end := int(math.Min(float64(start+seventv.PageSize), float64(total)))
+			if countSet && end > maxResults {
+				end = maxResults
+			}
 			emotes = emotes[start:end]
-			if end < total {
+			if end < total && (!countSet || end < maxResults) {
 				nextOffset = strconv.Itoa(end)
 			}
 		} else {
-			// Global: 7TV already returned the right page; more pages if full.
-			if len(emotes) == seventv.PageSize {
+			// Global: 7TV already returned the right page; more pages if full and under cap.
+			if len(emotes) == seventv.PageSize && (!countSet || pageOffset+seventv.PageSize < maxResults) {
 				nextOffset = strconv.Itoa(pageOffset + seventv.PageSize)
 			}
 		}

@@ -78,3 +78,15 @@ func ExactSearchEmotes(query string, e []Emote) []Emote {
 	}
 	return result
 }
+
+// ExactCISearchEmotes returns only emotes whose name exactly matches the query (case-insensitive).
+func ExactCISearchEmotes(query string, e []Emote) []Emote {
+	q := strings.ToLower(query)
+	var result []Emote
+	for _, em := range e {
+		if strings.ToLower(em.Name) == q {
+			result = append(result, em)
+		}
+	}
+	return result
+}
