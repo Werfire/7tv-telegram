@@ -146,7 +146,10 @@ func main() {
 				nextOffset = strconv.Itoa(end)
 			}
 		} else {
-			// Global: 7TV already returned the right page; more pages if full and under cap.
+			// Global: trim to cap on the last page, then paginate if more remain.
+			if countSet && pageOffset+len(emotes) > maxResults {
+				emotes = emotes[:maxResults-pageOffset]
+			}
 			if len(emotes) == seventv.PageSize && (!countSet || pageOffset+seventv.PageSize < maxResults) {
 				nextOffset = strconv.Itoa(pageOffset + seventv.PageSize)
 			}
