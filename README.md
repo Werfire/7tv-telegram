@@ -3,9 +3,9 @@ A Telegram bot that gives you 7TV Emotes
 
 ## Using the bot:
 
-Start by typing `@s7ntvbot` in any chat. You can specify optional number for limit as prefix (50 max, default 20) and then optional @CHANNEL_NAME to search emotes from some channel with its aliases. You can also make search exact match and case-sensitive by quoting emote name. Non-ASCII (e.g. cyrillic) emote names will also work.
+Start by typing `@s7ntvbot` in any chat. You can specify optional number for limit as prefix (will disable pagination scroll) and then optional @CHANNEL_NAME to search emotes from some channel with its aliases. You can also make search exact match and case-sensitive by quoting emote name and/or add caption to sent emote with emote name by prefixing search with '*'. Non-ASCII (e.g. cyrillic) emote names will also work.
 
-Example with all the features: `@s7ntvbot 67 @melharucos "melHi"`
+Example with all the features: `@s7ntvbot 67 @melharucos *"melHi"`
 
 ## Development
 
