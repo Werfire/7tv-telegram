@@ -10,9 +10,6 @@ func getEmotes(query string, channel string, exact bool) ([]emote.Emote, error) 
 	var err error
 
 	if channel != "" {
-		if query == "" {
-			return nil, nil
-		}
 		raw, err = seventv.ChannelEmotes(channel)
 		if err != nil {
 			return nil, err
@@ -20,6 +17,9 @@ func getEmotes(query string, channel string, exact bool) ([]emote.Emote, error) 
 		emotes := make([]emote.Emote, len(raw))
 		for i, e := range raw {
 			emotes[i] = e.Convert()
+		}
+		if query == "" {
+			return emotes, nil
 		}
 		if exact {
 			return emote.ExactSearchEmotes(query, emotes), nil
